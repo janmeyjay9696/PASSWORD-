@@ -1,0 +1,957 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nexus AI Council - Multi-AI Collaborative System</title>
+    <style>
+        :root {
+            --bg: #0f172a;
+            --card: #1e293b;
+            --accent: #38bdf8;
+            --text: #e2e8f0;
+            --text-dim: #94a3b8;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --error: #ef4444;
+            --purple: #8b5cf6;
+            --pink: #ec4899;
+            --orange: #f97316;
+            --teal: #14b8a6;
+        }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, var(--bg), #1e1b4b);
+            color: var(--text);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .dashboard {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 20px;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+        
+        .chat-section {
+            background: var(--card);
+            border-radius: 20px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.3);
+            height: 90vh;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #1e293b, #0f172a);
+            padding: 20px;
+            border-bottom: 1px solid #334155;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--accent), var(--purple), var(--pink), var(--teal));
+        }
+        
+        .header h1 { 
+            font-size: 1.5rem; 
+            background: linear-gradient(45deg, var(--accent), var(--purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 5px;
+        }
+        
+        .header p { 
+            color: var(--text-dim); 
+            font-size: 0.9rem; 
+            max-width: 600px;
+        }
+        
+        .ai-selector {
+            display: flex;
+            gap: 10px;
+            padding: 15px 20px;
+            background: rgba(15, 23, 42, 0.5);
+            border-bottom: 1px solid #334155;
+            flex-wrap: wrap;
+        }
+        
+        .ai-btn {
+            padding: 10px 20px;
+            border-radius: 10px;
+            background: rgba(56, 189, 248, 0.1);
+            border: 1px solid rgba(56, 189, 248, 0.3);
+            color: var(--accent);
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+        }
+        
+        .ai-btn:hover {
+            background: rgba(56, 189, 248, 0.2);
+            transform: translateY(-2px);
+        }
+        
+        .ai-btn.active {
+            background: linear-gradient(135deg, var(--accent), #0ea5e9);
+            color: white;
+            border-color: transparent;
+        }
+        
+        .ai-btn .rating {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-size: 0.8rem;
+        }
+        
+        #chatBody {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            scroll-behavior: smooth;
+        }
+        
+        .message {
+            padding: 16px 20px;
+            border-radius: 18px;
+            line-height: 1.5;
+            max-width: 80%;
+            position: relative;
+            animation: fadeIn 0.4s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .user {
+            background: linear-gradient(135deg, var(--accent), #0ea5e9);
+            align-self: flex-end;
+            border-bottom-right-radius: 4px;
+            color: white;
+        }
+        
+        .ai-message {
+            align-self: flex-start;
+            border-bottom-left-radius: 4px;
+            border-left: 4px solid;
+        }
+        
+        .message-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+        
+        .ai-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+        
+        .ai-name {
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+        
+        .ai-stats {
+            display: flex;
+            gap: 8px;
+            font-size: 0.8rem;
+            color: var(--text-dim);
+        }
+        
+        .stat {
+            display: flex;
+            align-items: center;
+            gap: 3px;
+        }
+        
+        .timestamp {
+            font-size: 0.75rem;
+            color: var(--text-dim);
+            margin-top: 8px;
+            opacity: 0.7;
+            text-align: right;
+        }
+        
+        .collaboration-message {
+            background: rgba(139, 92, 246, 0.1);
+            border: 1px solid var(--purple);
+            max-width: 95%;
+            align-self: center;
+            text-align: center;
+            font-size: 0.9rem;
+            padding: 12px 20px;
+            border-radius: 12px;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        
+        .input-area {
+            padding: 20px;
+            background: #1e293b;
+            display: flex;
+            gap: 12px;
+            border-top: 1px solid #334155;
+        }
+        
+        input {
+            flex: 1;
+            padding: 16px;
+            border-radius: 12px;
+            border: 1px solid #475569;
+            background: rgba(15,23,42,0.8);
+            color: var(--text);
+            font-size: 1rem;
+            outline: none;
+            transition: all 0.2s;
+        }
+        
+        input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(56,189,248,0.1);
+        }
+        
+        button {
+            padding: 16px 24px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, var(--accent), #0ea5e9);
+            border: none;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 10px 20px rgba(56,189,248,0.3);
+        }
+        
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .ai-panel {
+            background: var(--card);
+            border-radius: 20px;
+            padding: 25px;
+            border: 1px solid #334155;
+        }
+        
+        .ai-panel h2 {
+            color: var(--accent);
+            margin-bottom: 20px;
+            font-size: 1.3rem;
+        }
+        
+        .ai-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .ai-card {
+            background: rgba(15, 23, 42, 0.5);
+            padding: 15px;
+            border-radius: 12px;
+            border: 1px solid #334155;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+        
+        .ai-card:hover {
+            border-color: var(--accent);
+            transform: translateX(5px);
+        }
+        
+        .ai-card-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 10px;
+        }
+        
+        .ai-card-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+        
+        .ai-card-info {
+            flex: 1;
+        }
+        
+        .ai-card-name {
+            font-weight: 600;
+            margin-bottom: 3px;
+        }
+        
+        .ai-card-specialty {
+            font-size: 0.85rem;
+            color: var(--text-dim);
+        }
+        
+        .ai-card-stats {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.8rem;
+            color: var(--text-dim);
+        }
+        
+        .progress-bar {
+            height: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+            margin-top: 8px;
+            overflow: hidden;
+        }
+        
+        .progress {
+            height: 100%;
+            border-radius: 3px;
+            transition: width 0.3s ease;
+        }
+        
+        .stats-panel {
+            background: var(--card);
+            border-radius: 20px;
+            padding: 25px;
+            border: 1px solid #334155;
+        }
+        
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #334155;
+        }
+        
+        .stat-value {
+            font-weight: 600;
+            color: var(--accent);
+        }
+        
+        .collaboration-indicator {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 15px;
+            background: rgba(139, 92, 246, 0.1);
+            border-radius: 12px;
+            margin-top: 15px;
+            animation: glow 3s infinite;
+        }
+        
+        @keyframes glow {
+            0%, 100% { box-shadow: 0 0 5px rgba(139, 92, 246, 0.3); }
+            50% { box-shadow: 0 0 20px rgba(139, 92, 246, 0.5); }
+        }
+        
+        @media (max-width: 1200px) {
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
+            
+            .sidebar {
+                grid-row: 1;
+            }
+            
+            .chat-section {
+                height: 70vh;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .ai-selector {
+                justify-content: center;
+            }
+            
+            .message {
+                max-width: 95%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard">
+        <div class="chat-section">
+            <div class="header">
+                <h1>🤖 Nexus AI Council - Collaborative Intelligence</h1>
+                <p>8 specialized AIs working together | Ratings based on accuracy | View tracking for popularity</p>
+            </div>
+            
+            <div class="ai-selector">
+                <!-- AI buttons will be generated here -->
+            </div>
+            
+            <div id="chatBody">
+                <!-- Messages will appear here -->
+            </div>
+            
+            <div class="input-area">
+                <input type="text" id="userInput" placeholder="Ask any technical question... (e.g., 'Compare React vs Vue for large apps')" autocomplete="off">
+                <button onclick="handleSend()">Ask AI Council</button>
+            </div>
+        </div>
+        
+        <div class="sidebar">
+            <div class="ai-panel">
+                <h2>🤖 AI Experts Panel</h2>
+                <div class="ai-list" id="aiList">
+                    <!-- AI cards will be generated here -->
+                </div>
+                <div class="collaboration-indicator" id="collabIndicator">
+                    <span>🔗 AI Council: Collaborative Mode</span>
+                </div>
+            </div>
+            
+            <div class="stats-panel">
+                <h2>📊 System Statistics</h2>
+                <div id="systemStats">
+                    <!-- Stats will be updated here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // AI Council Database - Each AI has specialties, ratings, views, and responses
+        const aiCouncil = [
+            {
+                id: 'webdev_ai',
+                name: 'Devon',
+                specialty: 'Web Development',
+                avatar: '🌐',
+                color: '#38bdf8',
+                rating: 4.8,
+                views: 1250,
+                responses: 892,
+                expertise: ['React', 'Vue', 'Angular', 'JavaScript', 'TypeScript', 'CSS'],
+                description: 'Frontend architecture & modern frameworks expert',
+                keywords: ['javascript', 'react', 'vue', 'angular', 'frontend', 'css', 'html', 'typescript', 'webpack'],
+                responses_db: {
+                    react: "React excels with its component-based architecture and vast ecosystem. For large apps, use Redux for state management, React Router for navigation, and consider Next.js for SSR.",
+                    vue: "Vue offers progressive adoption and excellent documentation. Vue 3's Composition API provides better TypeScript support. Pinia is the recommended state management solution.",
+                    angular: "Angular provides a complete framework solution with built-in tools. Best for enterprise applications requiring strict architecture and TypeScript support."
+                }
+            },
+            {
+                id: 'backend_ai',
+                name: 'Baxter',
+                specialty: 'Backend & APIs',
+                avatar: '⚙️',
+                color: '#10b981',
+                rating: 4.7,
+                views: 980,
+                responses: 654,
+                expertise: ['Node.js', 'Python', 'Java', 'APIs', 'Microservices', 'Databases'],
+                description: 'Server architecture & API design specialist',
+                keywords: ['backend', 'api', 'node', 'python', 'java', 'rest', 'graphql', 'database', 'microservices'],
+                responses_db: {
+                    node: "Node.js excels in I/O-heavy applications with its non-blocking architecture. Use Express for REST, GraphQL for flexible queries, and consider NestJS for enterprise.",
+                    python: "Python backend: Django for batteries-included, Flask for lightweight. FastAPI for modern async APIs. Great for ML integration.",
+                    rest: "REST APIs: Stateless, resource-based. Use proper status codes, versioning, and OpenAPI documentation. Authentication via JWT/OAuth2."
+                }
+            },
+            {
+                id: 'dsa_ai',
+                name: 'Alina',
+                specialty: 'Algorithms & DSA',
+                avatar: '🧠',
+                color: '#8b5cf6',
+                rating: 4.9,
+                views: 2100,
+                responses: 1345,
+                expertise: ['Data Structures', 'Algorithms', 'Complexity', 'Interview Prep'],
+                description: 'Algorithm optimization & problem-solving guru',
+                keywords: ['algorithm', 'data structure', 'complexity', 'big o', 'leetcode', 'interview', 'sorting', 'tree', 'graph'],
+                responses_db: {
+                    complexity: "Time Complexity: O(1) constant, O(log n) logarithmic, O(n) linear, O(n²) quadratic. Space complexity measures memory usage.",
+                    sorting: "QuickSort: O(n log n) average, O(n²) worst. MergeSort: stable O(n log n). Use for large datasets.",
+                    tree: "Trees: BST for search (O(log n)), AVL for self-balancing, B-Trees for databases. Traversal: Inorder, Preorder, Postorder."
+                }
+            },
+            {
+                id: 'devops_ai',
+                name: 'Dex',
+                specialty: 'DevOps & Cloud',
+                avatar: '☁️',
+                color: '#f59e0b',
+                rating: 4.6,
+                views: 870,
+                responses: 543,
+                expertise: ['Docker', 'Kubernetes', 'AWS', 'CI/CD', 'Infrastructure'],
+                description: 'Cloud infrastructure & automation expert',
+                keywords: ['docker', 'kubernetes', 'aws', 'cloud', 'devops', 'ci/cd', 'terraform', 'jenkins'],
+                responses_db: {
+                    docker: "Docker containers package apps with dependencies. Images are templates, containers are running instances. Use Docker Compose for multi-container apps.",
+                    kubernetes: "K8s manages containerized apps at scale. Pods are smallest units, Deployments manage pods, Services enable networking.",
+                    aws: "AWS services: EC2 (compute), S3 (storage), RDS (databases), Lambda (serverless). Use IAM for security, CloudWatch for monitoring."
+                }
+            },
+            {
+                id: 'ml_ai',
+                name: 'Milo',
+                specialty: 'AI/ML & Data',
+                avatar: '🤖',
+                color: '#ec4899',
+                rating: 4.8,
+                views: 1100,
+                responses: 765,
+                expertise: ['Machine Learning', 'Deep Learning', 'Data Science', 'TensorFlow'],
+                description: 'Machine learning models & data analysis specialist',
+                keywords: ['machine learning', 'ai', 'data science', 'tensorflow', 'pytorch', 'neural network', 'nlp'],
+                responses_db: {
+                    ml: "Machine Learning types: Supervised (labeled data), Unsupervised (patterns), Reinforcement (rewards). Feature engineering is crucial.",
+                    tensorflow: "TensorFlow: Google's ML framework. Use Keras API for simplicity. Great for production deployment with TF Serving.",
+                    nlp: "NLP: Transformers (BERT, GPT) revolutionized language tasks. Use Hugging Face for pre-trained models."
+                }
+            },
+            {
+                id: 'security_ai',
+                name: 'Sasha',
+                specialty: 'Security & Auth',
+                avatar: '🔒',
+                color: '#ef4444',
+                rating: 4.7,
+                views: 720,
+                responses: 432,
+                expertise: ['Cybersecurity', 'Authentication', 'Encryption', 'OWASP'],
+                description: 'Security protocols & vulnerability prevention expert',
+                keywords: ['security', 'authentication', 'encryption', 'jwt', 'oauth', 'xss', 'sql injection', 'https'],
+                responses_db: {
+                    auth: "Authentication methods: JWT (stateless tokens), OAuth2 (delegated access), Sessions (server-state). Always use HTTPS.",
+                    security: "OWASP Top 10: Injection, Broken Auth, Sensitive Data Exposure. Implement input validation, parameterized queries, CSP headers."
+                }
+            },
+            {
+                id: 'mobile_ai',
+                name: 'Mia',
+                specialty: 'Mobile Development',
+                avatar: '📱',
+                color: '#14b8a6',
+                rating: 4.5,
+                views: 650,
+                responses: 398,
+                expertise: ['React Native', 'Flutter', 'iOS', 'Android'],
+                description: 'Cross-platform mobile development specialist',
+                keywords: ['mobile', 'react native', 'flutter', 'ios', 'android', 'cross-platform', 'swift', 'kotlin'],
+                responses_db: {
+                    react_native: "React Native: Write once, run both iOS/Android. Uses native components via bridge. Expo for rapid development.",
+                    flutter: "Flutter: Google's UI toolkit. Compiles to native ARM, uses Dart language. Hot reload for fast iteration."
+                }
+            },
+            {
+                id: 'sysdesign_ai',
+                name: 'Simon',
+                specialty: 'System Design',
+                avatar: '🏗️',
+                color: '#8b5cf6',
+                rating: 4.9,
+                views: 950,
+                responses: 521,
+                expertise: ['Architecture', 'Scalability', 'Distributed Systems'],
+                description: 'Large-scale system architecture expert',
+                keywords: ['system design', 'architecture', 'scalability', 'distributed', 'load balancing', 'caching', 'sharding'],
+                responses_db: {
+                    scalability: "Scalability: Vertical (bigger machines) vs Horizontal (more machines). Load balancers distribute traffic.",
+                    caching: "Caching strategies: CDN (static), Redis (in-memory), Memcached (distributed). Cache invalidation is challenging."
+                }
+            }
+        ];
+
+        // Knowledge base for general responses
+        const knowledgeBase = {
+            'javascript': "JavaScript: Dynamic, prototype-based language. ES6+ added classes, modules, promises. Node.js enables server-side JS.",
+            'python': "Python: Interpreted, high-level. Great for scripting, web, data science. Emphasizes readability with significant whitespace.",
+            'react vs vue': "React: More flexible, larger ecosystem. Vue: Easier learning curve, better documentation. Both excellent choices.",
+            'docker vs kubernetes': "Docker: Containerization platform. Kubernetes: Container orchestration. Use Docker to build, K8s to manage.",
+            'rest vs graphql': "REST: Multiple endpoints, fixed responses. GraphQL: Single endpoint, flexible queries. Choose based on client needs."
+        };
+
+        // System state
+        let activeAIs = ['webdev_ai', 'backend_ai']; // Default collaborative group
+        let chatHistory = [];
+        let systemStats = {
+            totalQuestions: 0,
+            totalViews: 0,
+            averageRating: 0,
+            collaborationCount: 0
+        };
+
+        // Initialize UI
+        function initializeUI() {
+            // Generate AI selector buttons
+            const aiSelector = document.querySelector('.ai-selector');
+            aiSelector.innerHTML = '<span style="color: var(--text-dim); margin-right: 10px;">Select AI(s):</span>';
+            
+            aiCouncil.forEach(ai => {
+                const btn = document.createElement('button');
+                btn.className = `ai-btn ${activeAIs.includes(ai.id) ? 'active' : ''}`;
+                btn.innerHTML = `
+                    ${ai.avatar} ${ai.name}
+                    <span class="rating">${ai.rating}★</span>
+                `;
+                btn.onclick = () => toggleAI(ai.id);
+                aiSelector.appendChild(btn);
+            });
+
+            // Generate AI cards
+            const aiList = document.getElementById('aiList');
+            aiCouncil.forEach(ai => {
+                const card = document.createElement('div');
+                card.className = 'ai-card';
+                card.onclick = () => toggleAI(ai.id);
+                
+                const viewsPercentage = (ai.views / 2500) * 100;
+                const ratingPercentage = (ai.rating / 5) * 100;
+                
+                card.innerHTML = `
+                    <div class="ai-card-header">
+                        <div class="ai-card-avatar" style="background: ${ai.color}22; border: 2px solid ${ai.color}; color: ${ai.color}">
+                            ${ai.avatar}
+                        </div>
+                        <div class="ai-card-info">
+                            <div class="ai-card-name">${ai.name}</div>
+                            <div class="ai-card-specialty">${ai.specialty}</div>
+                        </div>
+                    </div>
+                    <div class="ai-card-stats">
+                        <span>👁️ ${ai.views.toLocaleString()} views</span>
+                        <span>⭐ ${ai.rating}/5</span>
+                        <span>💬 ${ai.responses} answers</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress" style="width: ${viewsPercentage}%; background: ${ai.color}"></div>
+                    </div>
+                `;
+                aiList.appendChild(card);
+            });
+
+            // Update system stats
+            updateSystemStats();
+            
+            // Add welcome message
+            addAIMessage(
+                'system',
+                "Welcome to the Nexus AI Council! I'm coordinating 8 specialized AIs. Multiple experts will collaborate on your questions based on their ratings and expertise. Ask anything technical!",
+                'System Coordinator'
+            );
+        }
+
+        // Toggle AI participation
+        function toggleAI(aiId) {
+            const index = activeAIs.indexOf(aiId);
+            if (index > -1) {
+                activeAIs.splice(index, 1);
+            } else {
+                activeAIs.push(aiId);
+            }
+            
+            // Update UI
+            document.querySelectorAll('.ai-btn').forEach((btn, i) => {
+                if (aiCouncil[i].id === aiId) {
+                    btn.classList.toggle('active');
+                }
+            });
+            
+            // Show collaboration status
+            if (activeAIs.length > 1) {
+                document.getElementById('collabIndicator').innerHTML = 
+                    `🔗 ${activeAIs.length} AIs Collaborating: ${activeAIs.map(id => aiCouncil.find(a => a.id === id).name).join(', ')}`;
+            } else {
+                document.getElementById('collabIndicator').innerHTML = 
+                    `👤 Single AI Mode: ${aiCouncil.find(a => a.id === activeAIs[0])?.name || 'None selected'}`;
+            }
+        }
+
+        // Add AI message to chat
+        function addAIMessage(aiId, content, customName = null) {
+            const chatBody = document.getElementById('chatBody');
+            const ai = aiCouncil.find(a => a.id === aiId) || { name: customName, color: '#6b7280', avatar: '🤖' };
+            
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message ai-message';
+            messageDiv.style.borderLeftColor = ai.color;
+            messageDiv.style.background = `${ai.color}15`;
+            
+            const timestamp = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            
+            messageDiv.innerHTML = `
+                <div class="message-header">
+                    <div class="ai-avatar" style="background: ${ai.color}; color: white">
+                        ${ai.avatar}
+                    </div>
+                    <div>
+                        <div class="ai-name">${customName || ai.name}</div>
+                        <div class="ai-stats">
+                            <span class="stat">⭐ ${ai.rating || 4.5}/5</span>
+                            <span class="stat">👁️ ${ai.views ? (ai.views + 1).toLocaleString() : '1K'}</span>
+                            <span class="stat">${ai.specialty || 'AI'}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="message-content">${content}</div>
+                <div class="timestamp">${timestamp}</div>
+            `;
+            
+            chatBody.appendChild(messageDiv);
+            chatBody.scrollTop = chatBody.scrollHeight;
+            
+            // Update AI views
+            if (ai.views !== undefined) {
+                ai.views++;
+            }
+        }
+
+        // Add user message
+        function addUserMessage(content) {
+            const chatBody = document.getElementById('chatBody');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message user';
+            
+            const timestamp = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            messageDiv.innerHTML = `
+                <div class="message-content">${content}</div>
+                <div class="timestamp">${timestamp}</div>
+            `;
+            
+            chatBody.appendChild(messageDiv);
+            chatBody.scrollTop = chatBody.scrollHeight;
+            
+            systemStats.totalQuestions++;
+            updateSystemStats();
+        }
+
+        // Update system statistics
+        function updateSystemStats() {
+            const statsDiv = document.getElementById('systemStats');
+            const totalViews = aiCouncil.reduce((sum, ai) => sum + ai.views, 0);
+            const avgRating = (aiCouncil.reduce((sum, ai) => sum + ai.rating, 0) / aiCouncil.length).toFixed(1);
+            
+            statsDiv.innerHTML = `
+                <div class="stat-item">
+                    <span>Total Questions Asked:</span>
+                    <span class="stat-value">${systemStats.totalQuestions}</span>
+                </div>
+                <div class="stat-item">
+                    <span>Total AI Views:</span>
+                    <span class="stat-value">${totalViews.toLocaleString()}</span>
+                </div>
+                <div class="stat-item">
+                    <span>Average AI Rating:</span>
+                    <span class="stat-value">${avgRating} ★</span>
+                </div>
+                <div class="stat-item">
+                    <span>Active AIs:</span>
+                    <span class="stat-value">${activeAIs.length}</span>
+                </div>
+                <div class="stat-item">
+                    <span>Collaboration Rate:</span>
+                    <span class="stat-value">${systemStats.collaborationCount}</span>
+                </div>
+            `;
+        }
+
+        // Find best AI for a query
+        function findBestAIs(query) {
+            const queryLower = query.toLowerCase();
+            let aiScores = [];
+            
+            aiCouncil.forEach(ai => {
+                let score = 0;
+                
+                // Score based on keywords
+                ai.keywords.forEach(keyword => {
+                    if (queryLower.includes(keyword.toLowerCase())) {
+                        score += 2;
+                    }
+                });
+                
+                // Score based on expertise
+                ai.expertise.forEach(exp => {
+                    if (queryLower.includes(exp.toLowerCase())) {
+                        score += 3;
+                    }
+                });
+                
+                // Factor in rating (higher rated AIs get bonus)
+                score += (ai.rating - 4) * 2;
+                
+                // Factor in views (popular AIs get slight bonus)
+                score += (ai.views / 1000);
+                
+                if (score > 0) {
+                    aiScores.push({ ai, score });
+                }
+            });
+            
+            // Sort by score descending
+            aiScores.sort((a, b) => b.score - a.score);
+            
+            // Return top 3 AIs or all with positive scores
+            return aiScores.slice(0, 3).map(item => item.ai);
+        }
+
+        // Generate AI response
+        function generateAIResponse(ai, query) {
+            const queryLower = query.toLowerCase();
+            
+            // Check AI's specific responses
+            for (const [topic, response] of Object.entries(ai.responses_db)) {
+                if (queryLower.includes(topic.toLowerCase())) {
+                    return response;
+                }
+            }
+            
+            // Check general knowledge base
+            for (const [topic, response] of Object.entries(knowledgeBase)) {
+                if (queryLower.includes(topic.toLowerCase())) {
+                    return response;
+                }
+            }
+            
+            // Generate generic response based on specialty
+            const genericResponses = {
+                'Web Development': "Based on web development principles, I'd recommend focusing on component reusability and state management. Consider using TypeScript for larger applications.",
+                'Backend & APIs': "For backend systems, ensure proper error handling, logging, and monitoring. API design should follow RESTful principles or GraphQL based on requirements.",
+                'Algorithms & DSA': "This algorithmic problem requires considering time and space complexity. Let me analyze the constraints and suggest optimal approaches.",
+                'DevOps & Cloud': "For deployment, consider containerization and orchestration. Implement CI/CD pipelines for automated testing and deployment.",
+                'AI/ML & Data': "This involves data preprocessing, model selection, and evaluation metrics. Consider cross-validation to prevent overfitting.",
+                'Security & Auth': "Security considerations include input validation, authentication, and authorization. Always follow the principle of least privilege.",
+                'Mobile Development': "For mobile apps, consider native performance vs cross-platform development. Test on multiple device sizes and OS versions.",
+                'System Design': "System design requires considering scalability, reliability, and maintainability. Start with requirements gathering and API design."
+            };
+            
+            return genericResponses[ai.specialty] || "I can provide insights on this topic based on my expertise. Could you provide more specific details?";
+        }
+
+        // Handle user query
+        async function handleSend() {
+            const input = document.getElementById('userInput');
+            const query = input.value.trim();
+            
+            if (!query) return;
+            
+            // Add user message
+            addUserMessage(query);
+            input.value = '';
+            
+            // If no AIs selected, use collaborative mode
+            if (activeAIs.length === 0) {
+                activeAIs = ['webdev_ai', 'backend_ai'];
+                document.querySelectorAll('.ai-btn').forEach((btn, i) => {
+                    btn.classList.toggle('active', activeAIs.includes(aiCouncil[i].id));
+                });
+            }
+            
+            // Show collaboration message if multiple AIs
+            if (activeAIs.length > 1) {
+                const collabMsg = document.createElement('div');
+                collabMsg.className = 'collaboration-message';
+                collabMsg.innerHTML = `🤝 ${activeAIs.length} AIs are collaborating on this question...`;
+                document.getElementById('chatBody').appendChild(collabMsg);
+                systemStats.collaborationCount++;
+            }
+            
+            // Find best AIs for this query (if in auto mode)
+            const bestAIs = findBestAIs(query);
+            const respondingAIs = activeAIs.length > 1 ? 
+                aiCouncil.filter(ai => activeAIs.includes(ai.id)) : 
+                bestAIs.length > 0 ? bestAIs : [aiCouncil[0]];
+            
+            // Simulate AI thinking
+            await new Promise(resolve => setTimeout(resolve, 800 + Math.random() * 1200));
+            
+            // Remove collaboration message
+            const collabMsg = document.querySelector('.collaboration-message');
+            if (collabMsg) collabMsg.remove();
+            
+            // Add responses from each AI
+            respondingAIs.forEach((ai, index) => {
+                setTimeout(() => {
+                    const response = generateAIResponse(ai, query);
+                    
+                    // Add AI's response
+                    addAIMessage(ai.id, response);
+                    
+                    // Update AI stats
+                    ai.responses++;
+                    
+                    // Update system stats
+                    updateSystemStats();
+                    updateAICard(ai.id);
+                    
+                }, index * 500); // Stagger responses
+            });
+            
+            // Add to chat history
+            chatHistory.push({
+                query,
+                respondingAIs: respondingAIs.map(ai => ai.name),
+                timestamp: new Date()
+            });
+        }
+
+        // Update AI card in sidebar
+        function updateAICard(aiId) {
+            const ai = aiCouncil.find(a => a.id === aiId);
+            if (!ai) return;
+            
+            // In a real app, we'd update the specific card
+            // For now, we'll just update the system stats
+            updateSystemStats();
+        }
+
+        // Initialize on load
+        window.onload = initializeUI;
+        
+        // Enter key support
+        document.getElementById('userInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') handleSend();
+        });
+    </script>
+</body>
+</html>
